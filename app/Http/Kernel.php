@@ -1,5 +1,7 @@
 <?php
 
+//每個 HTTP 請求都經過一個kernel，這是一個全域中介層
+
 namespace App\Http;
 
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -7,11 +9,7 @@ use Illuminate\Foundation\Http\Kernel as HttpKernel;
 class Kernel extends HttpKernel
 {
     /**
-     * The application's global HTTP middleware stack.
-     *
-     * These middleware are run during every request to your application.
-     *
-     * @var array
+     * 全域中介層
      */
     protected $middleware = [
         // \App\Http\Middleware\TrustHosts::class,
@@ -21,12 +19,11 @@ class Kernel extends HttpKernel
         \Illuminate\Foundation\Http\Middleware\ValidatePostSize::class,
         \App\Http\Middleware\TrimStrings::class,
         \Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull::class,
+
     ];
 
     /**
-     * The application's route middleware groups.
-     *
-     * @var array
+     * 多個中介層組成單一的鍵，讓它可以簡單的指派給路由
      */
     protected $middlewareGroups = [
         'web' => [
@@ -46,11 +43,7 @@ class Kernel extends HttpKernel
     ];
 
     /**
-     * The application's route middleware.
-     *
-     * These middleware may be assigned to groups or used individually.
-     *
-     * @var array
+     * 為路由指派中介層
      */
     protected $routeMiddleware = [
         'auth' => \App\Http\Middleware\Authenticate::class,
@@ -62,5 +55,9 @@ class Kernel extends HttpKernel
         'signed' => \Illuminate\Routing\Middleware\ValidateSignature::class,
         'throttle' => \Illuminate\Routing\Middleware\ThrottleRequests::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
+        'scopes' => \Laravel\Passport\Http\Middleware\CheckScopes::class, //檢查所有scope都被允許
+        'scope' => \Laravel\Passport\Http\Middleware\CheckForAnyScope::class, //檢查至少有一個scope允許
+        'client' => \Laravel\Passport\Http\Middleware\CheckClientCredentials::class
+
     ];
 }

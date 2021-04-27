@@ -16,12 +16,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
-});
+/* Route::middleware('auth:api')->get('/user', function (Request $request) {
+     return $request->user();
+});*/
 
 
 Route::apiResource('animals', AnimalController::class);
 
 
 Route::apiResource('types', TypeController::class);
+
+//要求附上擁有user-info的token
+Route::middleware(['auth:api', 'scope:user-info'])->get('/user', function (Request $request) {
+    return $request->user();
+});

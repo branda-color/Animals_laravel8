@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Throwable;
 use Illuminate\Http\Response;
 use App\Traits\ApiResponseTrait;
+use Illuminate\Auth\Access\AuthorizationException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
 use Illuminate\Auth\AuthenticationException;
@@ -53,6 +54,15 @@ class Handler extends ExceptionHandler
 
         /*dd($exception); 可以中斷程式碼並傳入exception當下狀態*/
         if ($request->expectsJson()) { //攔截錯誤的程式碼
+
+            //scope驗證失敗
+
+            if ($exception instanceof AuthorizationException) {
+                return $this->errorResponse(
+                    $exception->getMessage(),
+                    Response::HTTP_FORBIDDEN //403用戶端並無訪問權限，例如未被授權，所以伺服器拒絕給予應有的回應
+                );
+            }
             //1.model找不到資源
             if ($exception instanceof ModelNotFoundException) {
                 return $this->errorResponse(

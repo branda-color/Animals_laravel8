@@ -16,6 +16,10 @@ class AnimalController extends Controller
 
     public function __construct()
     {
+        //查詢動物列表跟單一動物需要有客戶端token
+        $this->middleware('client', ['only' => ['index', 'show']]);
+        //表示新建動物方法使用scope中介驗證
+        $this->middleware('scopes:create-animals', ['only' => ['store']]);
         $this->middleware('auth:api', ['except' => ['index', 'show']]);
     }
     /**
