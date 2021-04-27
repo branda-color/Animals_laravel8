@@ -10,6 +10,7 @@ use Illuminate\Http\Response;
 use App\Traits\ApiResponseTrait;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Exception\MethodNotAllowedException;
+use Illuminate\Auth\AuthenticationException;
 
 class Handler extends ExceptionHandler
 {
@@ -76,5 +77,18 @@ class Handler extends ExceptionHandler
         }
 
         return parent::render($request, $exception);
+    }
+    protected function unauthenticated($request, AuthenticationException $exception)
+    {
+        //客戶端請求json格式
+        if ($request->expectsJson()) {
+            return $this->errorResponse(
+                $exception->getMessage(),
+                Response::HTTP_UNAUTHORIZED //401需要授權以回應請求
+            );
+        } else {
+            //客戶端非請求json格式轉回登入畫面
+            return redirect()->guest($exception->redirectTo() ?? route('login'));
+        }
     }
 }
