@@ -48,4 +48,8 @@ class User extends Authenticatable
     ];
 
     //會員與動物資料關聯
+    public function animals()
+    {
+        return $this->hasMany('App\Models\Animal', 'user_id', 'id');
+    }
 }

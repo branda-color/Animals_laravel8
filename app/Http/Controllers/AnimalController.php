@@ -23,9 +23,7 @@ class AnimalController extends Controller
         $this->middleware('auth:api', ['except' => ['index', 'show']]);
     }
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
+     *查詢資源列表，資源篩選/排序/分頁(進)
      */
     public function index(Request $request)
     {
@@ -101,9 +99,9 @@ class AnimalController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
+     * 回傳網頁畫面功能(出)
+     * 新增動物網頁畫面
+     * (新增一個controller來另外處理網頁畫面)
      */
     public function create()
     {
@@ -111,10 +109,7 @@ class AnimalController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * 新建分類功能(進)
      */
     public function store(Request $request)
     {
@@ -132,8 +127,12 @@ class AnimalController extends Controller
         ]);
 
 
-        $request['user_id'] = 1;
-        $animal = Animal::create($request->all());
+        /*$request['user_id'] = 1;
+        $animal = Animal::create($request->all());*/
+
+        //新增取得使用者登入帳號資訊
+        $animal = auth()->user()->animals()->create($request->all());
+
         $animal = $animal->refresh();
         return response($animal, Response::HTTP_CREATED);
     }
@@ -150,10 +149,9 @@ class AnimalController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  \App\Models\Animal  $animal
-     * @return \Illuminate\Http\Response
+     * 回傳網頁畫面功能(出)
+     * 編輯動物網頁畫面
+     * (新增一個controller來另外處理網頁畫面)
      */
     public function edit(Animal $animal)
     {
@@ -161,11 +159,8 @@ class AnimalController extends Controller
     }
 
     /**
-     * Update the specified resource in storage.
+     *更新已存在分類 
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Animal  $animal
-     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Animal $animal)
     {
@@ -174,14 +169,11 @@ class AnimalController extends Controller
             'type_id' => 'nullable|exists:types,id',
         ]);
         $animal->update($request->all());
-        return response($animal, Response::HTTP_OK);
+        return new AnimalResource($animal);
     }
 
     /**
-     * Remove the specified resource from storage.
-     *
-     * @param  \App\Models\Animal  $animal
-     * @return \Illuminate\Http\Response
+     * 刪除單一分類
      */
     public function destroy(Animal $animal)
     {
