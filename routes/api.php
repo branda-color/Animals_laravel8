@@ -4,6 +4,7 @@ use App\Http\Controllers\AnimalController;
 use App\Http\Controllers\TypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Animal\AnimalLikeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,3 +31,8 @@ Route::apiResource('types', TypeController::class);
 Route::middleware(['auth:api', 'scope:user-info'])->get('/user', function (Request $request) {
     return $request->user();
 });
+
+//路由animals.like(中間可加上id->post表示目前登入使用者喜歡id動物/get表示查看所有追蹤id的會員)
+Route::apiResource('animals.likes', AnimalLikeController::class)->only([ //只保留index和store兩種路由設定
+    'index', 'store'
+]);

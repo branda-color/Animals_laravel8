@@ -36,4 +36,21 @@ class Animal extends Model
         $diff = Carbon::now()->diff($this->birthday); //diff方法拿該集合與其他集合或純 PHP 陣列進行比較
         return "{$diff->y}歲{$diff->m}月";
     }
+
+    /**
+     * 取得動物刊登會員，一對多的反向關聯
+     */
+    public function user()
+    {
+        return $this->belongsTo('App\Models\User');
+    }
+
+    /**
+     * 多對多關聯animal與user我的最愛關係
+     */
+    public function likes()
+    {
+        return $this->belongsToMany('App\Models\User', 'animal_user_likes')
+            ->withTimestamps();
+    }
 }

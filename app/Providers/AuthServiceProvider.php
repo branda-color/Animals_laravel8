@@ -6,6 +6,8 @@ use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvid
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Password;
 use Laravel\Passport\Passport;
+use App\Models\Animal;
+use App\Policies\AnimalPolicy;
 
 
 class AuthServiceProvider extends ServiceProvider
@@ -17,6 +19,7 @@ class AuthServiceProvider extends ServiceProvider
      */
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
+        Animal::class => AnimalPolicy::class,
     ];
 
     /**

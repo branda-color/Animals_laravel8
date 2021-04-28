@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Resources\AnimalCollection;
 use App\Http\Resources\AnimalResource;
 use App\Models\Animal;
+use App\Policies\AnimalPolicy;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 
 class AnimalController extends Controller
@@ -113,7 +116,8 @@ class AnimalController extends Controller
      */
     public function store(Request $request)
     {
-
+        //加上驗證權限
+        $this->authorize('create', Animal::class);
 
         //建立驗證表單新增
         $this->validate($request, [
@@ -135,6 +139,35 @@ class AnimalController extends Controller
 
         $animal = $animal->refresh();
         return response($animal, Response::HTTP_CREATED);
+
+        //try 包住可能出錯的程式
+        try {
+            //開始資料庫交易(開啟手動交易)
+            DB::beginTransaction();
+            //登入會員新增動物，建立會員與動物關係，返回動物物件
+            $animal = auth()->user()->animals()->create($request->all());
+            //刷新動物物件(從資料庫讀取完整欄位資料)
+            $animal = $animal->refresh();
+            //寫入第二張資料表
+            //製作建立動物資源同時將動物加到我的最愛(attach附加規則)
+            $animal->likes()->attach(auth()->user()->id);
+            //提交資料庫，正式寫入資料庫
+            DB::commit();
+            //回傳資料
+            return new AnimalResource($animal);
+        } catch (\Exception $e) {
+            //擷取到exception例外錯誤，上面做了什麼事在這裡寫復原程式
+            //恢復資料庫交易
+            DB::rollBack();
+
+            //或紀錄log
+            $errorMessage = 'MESSAGE' . $e->getMessage();
+            Log::error($errorMessage);
+            //回傳錯誤訊息並且設定500狀態(伺服器錯誤)
+            return response([
+                'error' => '程式異常'
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -164,6 +197,8 @@ class AnimalController extends Controller
      */
     public function update(Request $request, Animal $animal)
     {
+        //分組權限檢查
+        $this->authorize('update', $animal);
         //更新資料的方法
         $this->validate($request, [
             'type_id' => 'nullable|exists:types,id',
