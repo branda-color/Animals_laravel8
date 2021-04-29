@@ -12,13 +12,18 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Http\Requests\StoreAnimalRequest;
+use App\Services\AnimalService;
 
 
 class AnimalController extends Controller
 {
+    private $animalService;
 
-    public function __construct()
+    public function __construct(AnimalService $animalService)
     {
+        //外部物件賦予自身類別的屬性
+        $this->animalService = $animalService;
         //查詢動物列表跟單一動物需要有客戶端token
         $this->middleware('client', ['only' => ['index', 'show']]);
         //表示新建動物方法使用scope中介驗證
@@ -53,22 +58,33 @@ class AnimalController extends Controller
             return Cache::get($fullUrl);
         }
 
+        $animals = $this->animalService->getListData($request);
+
+        //沒有快取紀錄記住資料，並設定60秒過期
+        return Cache::remember($fullUrl, 60, function () use ($animals) {
+            //return response($animals, Response::HTTP_OK);
+            return new AnimalCollection($animals);
+        });
 
 
-        //設定預設值
-        $limit = $request->limit ?? 10;
 
-        //建立查詢建構器，分段寫sql
-        $query = Animal::query()->with('type'); //跟Anima->model做關聯(使用model內的type方法)
+        /*設定預設值
+        $limit = $request->limit ?? 10;*/
 
-        //篩選程式邏輯設定filters參數
+        /*建立查詢建構器，分段寫sql
+        $query = Animal::query()->with('type'); //跟Anima->model做關聯(使用model內的type方法)*/
+
+        /*篩選程式邏輯設定filters參數
         if (isset($request->filters)) {
             $filters = explode(',', $request->filters); //字串切割成陣列
             foreach ($filters as $key => $filter) {
                 list($key, $value) = explode(':', $filter); //第一元素變成key,第二元素變成value
                 $query->where($key, 'like', "%$value%"); //sql的where語法篩選部分字串
             }
-        }
+        }  ---->移到services內*/
+
+        //簡化成這句(呼叫)
+        //$query = $this->animalService->filterAnimals($query, $request->filters);
 
         /*使用sql語法排序
         $animals = $query->orderby('id', 'desc')
@@ -77,7 +93,7 @@ class AnimalController extends Controller
         return response($animals, Response::HTTP_OK);*/
 
 
-        //排列查詢順序
+        /*排列查詢順序
         if (isset($request->sorts)) {
             $sorts = explode(',', $request->sorts);
             foreach ($sorts as $key => $sort) {
@@ -88,17 +104,17 @@ class AnimalController extends Controller
             }
         } else {
             $query->orderBy('id', 'desc');
-        }
+        }   //---->移動到service內*/
 
 
-        $animals = $query
+        //簡化成這句(呼叫service)
+        //$query = $this->animalService->sortAnimals($query, $request->sorts);
+
+
+
+        /*$animals = $query
             ->paginate($limit)
-            ->appends($request->query());
-
-        return Cache::remember($fullUrl, 60, function () use ($animals) {
-            //return response($animals, Response::HTTP_OK);
-            return new AnimalCollection($animals);
-        });
+            ->appends($request->query());*/
     }
 
     /**
@@ -114,12 +130,12 @@ class AnimalController extends Controller
     /**
      * 新建分類功能(進)
      */
-    public function store(Request $request)
+    public function store(StoreAnimalRequest $request)
     {
         //加上驗證權限
         $this->authorize('create', Animal::class);
 
-        //建立驗證表單新增
+        /*建立驗證表單新增
         $this->validate($request, [
             'type_id' => 'nullable|exists:types,id',
             'name' => 'required|string|max:255',
@@ -129,6 +145,8 @@ class AnimalController extends Controller
             'description' => 'nullable',
             'personality' => 'nullable'
         ]);
+        移到StoreAnimalRequest
+        */
 
 
         /*$request['user_id'] = 1;
